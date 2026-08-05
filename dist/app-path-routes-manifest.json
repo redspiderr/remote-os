@@ -1,6 +1,9 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
+  "/api/auth/signup/route": "/api/auth/signup",
+  "/api/health/route": "/api/health",
   "/api/transcribe/route": "/api/transcribe",
   "/favicon.ico/route": "/favicon.ico",
   "/page": "/"
