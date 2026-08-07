@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -10,9 +10,9 @@ export interface Standup {
   id: string;
   user: {
     name: string;
-    avatar?: string; // URL or initials fallback
+    avatar?: string | null;
   };
-  timestamp: string; // ISO string
+  timestamp: string;
   status: StandupStatus;
   transcript: string;
   summary: string;
@@ -27,76 +27,19 @@ export interface TeamHealth {
   avgDurationSeconds: number;
 }
 
-// ─── Mock Data ──────────────────────────────────────────────────────
-
-const MOCK_STANDUPS: Standup[] = [
-  {
-    id: '1',
-    user: { name: 'Elliot Alderson', avatar: 'EA' },
-    timestamp: new Date().toISOString(),
-    status: 'Summarized',
-    transcript:
-      'Yesterday I finished the auth middleware and refactored the login flow. Today I\'m picking up the API rate limiting ticket. No blockers so far.',
-    summary: 'Auth middleware done, moving to rate limiting. No blockers.',
-    durationSeconds: 62,
-  },
-  {
-    id: '2',
-    user: { name: 'Darlene Alderson', avatar: 'DA' },
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30m ago
-    status: 'Transcribed',
-    transcript:
-      'Closed three PRs on the dashboard widgets. Waiting on design review for the new chart components. Need access to staging logs.',
-    summary: 'Three PRs merged, awaiting design review and staging log access.',
-    durationSeconds: 48,
-  },
-  {
-    id: '3',
-    user: { name: 'Tyrell Wellick', avatar: 'TW' },
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2h ago
-    status: 'Recorded',
-    transcript: '',
-    summary: '',
-    durationSeconds: 34,
-  },
-  {
-    id: '4',
-    user: { name: 'Angela Moss', avatar: 'AM' },
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // yesterday
-    status: 'Summarized',
-    transcript:
-      'Reviewed the accessibility audit and opened five issues. Planning to pair with design on contrast fixes this afternoon.',
-    summary: 'Accessibility audit complete, 5 issues opened. Pairing on contrast fixes today.',
-    durationSeconds: 55,
-  },
-  {
-    id: '5',
-    user: { name: 'Shayla Nico', avatar: 'SN' },
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(), // 26h ago
-    status: 'Summarized',
-    transcript:
-      'Deployed the new CI pipeline. Build times are down by 40%. Will monitor metrics for the rest of the week.',
-    summary: 'CI pipeline deployed, 40% faster builds. Monitoring metrics.',
-    durationSeconds: 71,
-  },
-  {
-    id: '6',
-    user: { name: 'Phillip Price', avatar: 'PP' },
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-    status: 'Transcribed',
-    transcript:
-      'Finalized Q3 roadmap with product. Engineering headcount will expand by two next month.',
-    summary: 'Q3 roadmap finalized. Hiring two engineers next month.',
-    durationSeconds: 42,
-  },
-];
-
-const TEAM_HEALTH: TeamHealth = {
-  totalMembers: 8,
-  submittedToday: 3,
-  submittedThisWeek: 6,
-  avgDurationSeconds: 52,
-};
+interface ApiStandup {
+  id: string;
+  user: {
+    name: string;
+    avatar?: string | null;
+  };
+  timestamp: string;
+  status: StandupStatus;
+  transcript: string;
+  summary: string;
+  videoUrl?: string;
+  durationSeconds?: number;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -165,7 +108,7 @@ function getInitials(name: string): string {
 
 // ─── Sub-Components ─────────────────────────────────────────────────
 
-function Avatar({ name, src }: { name: string; src?: string }) {
+function Avatar({ name, src }: { name: string; src?: string | null }) {
   if (src && src.startsWith('http')) {
     return (
       <img
@@ -377,15 +320,67 @@ export interface StandupDashboardProps {
 export default function StandupDashboard({
   standups: propStandups,
   health: propHealth,
-  loading = false,
+  loading: propLoading = false,
   onPlayVideo,
 }: StandupDashboardProps) {
   const [filter, setFilter] = useState<'today' | 'week' | 'all'>('today');
   const [search, setSearch] = useState('');
   const [activeVideo, setActiveVideo] = useState<Standup | null>(null);
 
-  const standups = propStandups ?? MOCK_STANDUPS;
-  const health = propHealth ?? TEAM_HEALTH;
+  const [data, setData] = useState<Standup[]>(propStandups ?? []);
+  const [health, setHealth] = useState<TeamHealth | null>(propHealth ?? null);
+  const [loading, setLoading] = useState<boolean>(propLoading);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStandups = useCallback(async () => {
+    if (propStandups) return; // external data takes precedence
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/standups');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Failed to load standups (${res.status})`);
+      }
+      const json = (await res.json()) as { standups: ApiStandup[] };
+      setData(json.standups ?? []);
+
+      // Derive team health from fetched data
+      const todayCount = (json.standups ?? []).filter((s) => isToday(s.timestamp)).length;
+      const weekCount = (json.standups ?? []).filter((s) => isThisWeek(s.timestamp)).length;
+      const durations = (json.standups ?? [])
+        .filter((s) => typeof s.durationSeconds === 'number')
+        .map((s) => s.durationSeconds as number);
+      const avgDuration = durations.length > 0
+        ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+        : 0;
+
+      setHealth({
+        totalMembers: Math.max(1, todayCount + 2), // heuristic fallback
+        submittedToday: todayCount,
+        submittedThisWeek: weekCount,
+        avgDurationSeconds: avgDuration,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Dashboard fetch error:', message);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [propStandups]);
+
+  useEffect(() => {
+    fetchStandups();
+  }, [fetchStandups]);
+
+  const standups = propStandups ?? data;
+  const teamHealth = propHealth ?? health ?? {
+    totalMembers: 1,
+    submittedToday: 0,
+    submittedThisWeek: 0,
+    avgDurationSeconds: 0,
+  };
 
   const filtered = useMemo(() => {
     let list = standups;
@@ -406,7 +401,6 @@ export default function StandupDashboard({
       );
     }
 
-    // newest first
     return list.sort((a, b) => +new Date(b.timestamp) - +new Date(a.timestamp));
   }, [standups, filter, search]);
 
@@ -421,7 +415,7 @@ export default function StandupDashboard({
   return (
     <div className="w-full">
       {/* Manager Health Bar */}
-      <TeamHealthBar health={health} />
+      <TeamHealthBar health={teamHealth} />
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6">
@@ -469,6 +463,14 @@ export default function StandupDashboard({
           />
         </div>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="mb-4 rounded-xl border border-[#E8634B]/20 bg-[#E8634B]/10 px-4 py-3 text-sm text-[#E8634B] flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={fetchStandups} className="underline font-medium hover:text-white">Retry</button>
+        </div>
+      )}
 
       {/* Results count */}
       <div className="flex items-center justify-between mb-4">

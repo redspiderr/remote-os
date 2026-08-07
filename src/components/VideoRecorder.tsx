@@ -5,11 +5,12 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 const MAX_RECORDING_SECONDS = 90;
 
 interface RecordingState {
-  status: 'idle' | 'requesting' | 'previewing' | 'recording' | 'paused' | 'stopped' | 'error';
+  status: 'idle' | 'requesting' | 'previewing' | 'recording' | 'paused' | 'stopped' | 'error' | 'uploading' | 'processing' | 'done';
   errorMessage: string | null;
   timeRemaining: number;
   recordedTime: number;
   downloadUrl: string | null;
+  progressLabel: string;
 }
 
 export default function VideoRecorder() {
@@ -25,6 +26,7 @@ export default function VideoRecorder() {
     timeRemaining: MAX_RECORDING_SECONDS,
     recordedTime: 0,
     downloadUrl: null,
+    progressLabel: '',
   });
 
   const clearTimer = useCallback(() => {
@@ -78,6 +80,7 @@ export default function VideoRecorder() {
       timeRemaining: MAX_RECORDING_SECONDS,
       recordedTime: 0,
       downloadUrl: null,
+      progressLabel: '',
     }));
 
     try {
@@ -163,7 +166,6 @@ export default function VideoRecorder() {
         const nextRemaining = Math.max(0, MAX_RECORDING_SECONDS - nextRecorded);
 
         if (nextRemaining <= 0) {
-          // Auto-stop at max
           if (
             mediaRecorderRef.current &&
             mediaRecorderRef.current.state !== 'inactive'
@@ -248,7 +250,119 @@ export default function VideoRecorder() {
       timeRemaining: MAX_RECORDING_SECONDS,
       recordedTime: 0,
       downloadUrl: null,
+      progressLabel: '',
     });
+  };
+
+  const saveToDatabase = async () => {
+    if (!state.downloadUrl) return;
+
+    try {
+      setState((prev) => ({ ...prev, status: 'uploading', progressLabel: 'Uploading video…' }));
+
+      // Fetch the blob from the object URL
+      const response = await fetch(state.downloadUrl);
+      const blob = await response.blob();
+
+      const mimeType = getSupportedMimeType();
+      const filename = `standup-${Date.now()}.webm`;
+      const file = new File([blob], filename, { type: mimeType });
+
+      // 1. Upload video
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadForm,
+      });
+
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}));
+        throw new Error(err.error || `Upload failed (${uploadRes.status})`);
+      }
+
+      const { video_url: videoUrl } = (await uploadRes.json()) as { video_url: string };
+
+      // 2. Create standup record (pending)
+      const standupRes = await fetch('/api/standups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          video_url: videoUrl,
+          status: 'pending',
+        }),
+      });
+
+      if (!standupRes.ok) {
+        const err = await standupRes.json().catch(() => ({}));
+        throw new Error(err.error || `Standup create failed (${standupRes.status})`);
+      }
+
+      const standup = (await standupRes.json()) as { id: string };
+
+      // 3. Transcribe
+      setState((prev) => ({ ...prev, status: 'processing', progressLabel: 'Transcribing with Whisper…' }));
+
+      const transcribeForm = new FormData();
+      transcribeForm.append('file', file);
+
+      const transcribeRes = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: transcribeForm,
+      });
+
+      if (!transcribeRes.ok) {
+        const err = await transcribeRes.json().catch(() => ({}));
+        throw new Error(err.error || `Transcription failed (${transcribeRes.status})`);
+      }
+
+      const { transcript, duration } = (await transcribeRes.json()) as {
+        transcript: string;
+        duration?: number;
+      };
+
+      // Update standup with transcript + status processing
+      await fetch('/api/standups', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: standup.id,
+          transcript,
+          duration: Math.round(duration ?? state.recordedTime),
+          status: 'processing',
+        }),
+      });
+
+      // 4. Summarize
+      setState((prev) => ({ ...prev, progressLabel: 'Summarizing with GPT…' }));
+
+      const summarizeRes = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcript,
+          standup_id: standup.id,
+          user_id: standup.id,
+        }),
+      });
+
+      if (!summarizeRes.ok) {
+        const err = await summarizeRes.json().catch(() => ({}));
+        throw new Error(err.error || `Summarization failed (${summarizeRes.status})`);
+      }
+
+      // Summarize endpoint auto-updates DB with summary fields + status 'completed'
+      setState((prev) => ({ ...prev, status: 'done', progressLabel: 'Standup saved!' }));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Save pipeline error:', message);
+      setState((prev) => ({
+        ...prev,
+        status: 'error',
+        errorMessage: message,
+      }));
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -274,15 +388,31 @@ export default function VideoRecorder() {
             src={state.status === 'stopped' && state.downloadUrl ? state.downloadUrl : undefined}
           />
 
-          {/* Overlay for idle / requesting */}
-          {(state.status === 'idle' || state.status === 'requesting') && (
+          {/* Overlay for idle / requesting / uploading / processing */}
+          {(state.status === 'idle' || state.status === 'requesting' || state.status === 'uploading' || state.status === 'processing') && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1A1D2E]/80 text-[#F9F7F2]">
               <div className="w-16 h-16 mb-4 rounded-full border-4 border-[#2A6FBB]/30 border-t-[#2A6FBB] animate-spin" />
               <p className="text-sm font-medium">
                 {state.status === 'requesting'
                   ? 'Requesting camera & microphone...'
+                  : state.status === 'uploading'
+                  ? state.progressLabel
+                  : state.status === 'processing'
+                  ? state.progressLabel
                   : 'Ready to record'}
               </p>
+            </div>
+          )}
+
+          {/* Done overlay */}
+          {state.status === 'done' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1A1D2E]/90 text-[#F9F7F2]">
+              <div className="w-16 h-16 mb-4 rounded-full bg-[#5A7D3F]/20 flex items-center justify-center">
+                <svg className="w-8 h-8 text-[#5A7D3F]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium">{state.progressLabel}</p>
             </div>
           )}
 
@@ -290,7 +420,7 @@ export default function VideoRecorder() {
           {state.status === 'error' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1A1D2E]/90 text-[#F9F7F2] px-6 text-center">
               <p className="text-3xl mb-2">⚠️</p>
-              <p className="text-sm text-[#E8634B] font-semibold mb-1">Camera Error</p>
+              <p className="text-sm text-[#E8634B] font-semibold mb-1">Error</p>
               <p className="text-xs text-[#6B7280] max-w-xs">{state.errorMessage}</p>
             </div>
           )}
@@ -324,7 +454,7 @@ export default function VideoRecorder() {
             </button>
           )}
 
-          {(state.status === 'previewing') && (
+          {state.status === 'previewing' && (
             <>
               <button
                 onClick={startRecording}
@@ -404,12 +534,37 @@ export default function VideoRecorder() {
                 Download Video
               </a>
               <button
+                onClick={saveToDatabase}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5A7D3F] text-white font-semibold text-sm hover:bg-[#4c6b35] transition-colors shadow-lg shadow-[#5A7D3F]/20"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 7-13.5" />
+                </svg>
+                Save Standup
+              </button>
+              <button
                 onClick={resetAll}
                 className="px-5 py-3 rounded-xl border border-[#6B7280]/40 text-[#6B7280] text-sm font-medium hover:text-[#F9F7F2] hover:border-[#F9F7F2]/30 transition-colors"
               >
                 Record Another
               </button>
             </>
+          )}
+
+          {(state.status === 'uploading' || state.status === 'processing') && (
+            <div className="flex items-center gap-2 text-sm text-[#6B7280]">
+              <div className="w-4 h-4 rounded-full border-2 border-[#2A6FBB]/30 border-t-[#2A6FBB] animate-spin" />
+              {state.progressLabel}
+            </div>
+          )}
+
+          {state.status === 'done' && (
+            <button
+              onClick={resetAll}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2A6FBB] text-white font-semibold text-sm hover:bg-[#1f5a9c] transition-colors shadow-lg shadow-[#2A6FBB]/20"
+            >
+              Record Another Standup
+            </button>
           )}
 
           {state.status === 'error' && (
@@ -427,7 +582,7 @@ export default function VideoRecorder() {
       <div className="mt-4 text-center">
         <p className="text-xs text-[#6B7280]">
           Max {MAX_RECORDING_SECONDS}s per standup · Uses your browser&apos;s camera and microphone ·
-          All processing happens locally
+          All processing happens on the server
         </p>
       </div>
     </div>
