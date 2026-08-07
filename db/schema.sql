@@ -74,6 +74,20 @@ CREATE TABLE IF NOT EXISTS standups (
     created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Focus Sessions
+CREATE TABLE IF NOT EXISTS focus_sessions (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    task        VARCHAR(255),
+    duration    INTEGER NOT NULL, -- scheduled minutes
+    completed   BOOLEAN DEFAULT FALSE,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_id ON focus_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_focus_sessions_created_at ON focus_sessions(created_at);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_team_id ON users(team_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
