@@ -61,13 +61,17 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
 -- Standups
 CREATE TABLE IF NOT EXISTS standups (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    video_url   TEXT NOT NULL,
-    transcript  TEXT,
-    summary     TEXT,
-    status      VARCHAR(50) DEFAULT 'pending',
-    duration    INTEGER, -- seconds
-    created_at  TIMESTAMPTZ DEFAULT NOW()
+    user_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    video_url        TEXT NOT NULL,
+    transcript       TEXT,
+    summary          TEXT,
+    blockers         JSONB DEFAULT '[]',
+    action_items     JSONB DEFAULT '[]',
+    sentiment        VARCHAR(20) CHECK (sentiment IN ('positive', 'neutral', 'concerned')),
+    key_achievements JSONB DEFAULT '[]',
+    status           VARCHAR(50) DEFAULT 'pending',
+    duration         INTEGER, -- seconds
+    created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes
