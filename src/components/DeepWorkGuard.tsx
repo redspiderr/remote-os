@@ -374,7 +374,7 @@ export default function DeepWorkGuard({ minimal = false, onPhaseChange }: DeepWo
       {isRunning && (
         <div className="flex flex-col items-center gap-6">
           <ProgressCircle seconds={secondsLeft} total={totalSeconds}>
-            <div className="text-4xl font-mono font-bold text-[#F9F7F2] tracking-tight">
+            <div data-testid="timer-display" className="text-4xl font-mono font-bold text-[#F9F7F2] tracking-tight">
               {formatTime(secondsLeft)}
             </div>
             <div className="text-xs text-[#6B7280] mt-1 uppercase tracking-wider">

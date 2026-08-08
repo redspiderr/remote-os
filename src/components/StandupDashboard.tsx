@@ -127,7 +127,7 @@ function Avatar({ name, src }: { name: string; src?: string | null }) {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-[#2A6FBB]/10 bg-[#1A1D2E] p-5 animate-pulse">
+    <div data-testid="skeleton-card" className="rounded-2xl border border-[#2A6FBB]/10 bg-[#1A1D2E] p-5 animate-pulse">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-full bg-[#2A6FBB]/10" />
         <div className="flex-1 space-y-2">
