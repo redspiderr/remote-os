@@ -63,7 +63,20 @@ self.__SERVER_FILES_MANIFEST={
           "search": ""
         }
       ],
-      "remotePatterns": [],
+      "remotePatterns": [
+        {
+          "protocol": "https",
+          "hostname": "lh3.googleusercontent.com"
+        },
+        {
+          "protocol": "https",
+          "hostname": "*.googleusercontent.com"
+        },
+        {
+          "protocol": "https",
+          "hostname": "avatars.githubusercontent.com"
+        }
+      ],
       "qualities": [
         75
       ],

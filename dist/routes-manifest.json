@@ -29,6 +29,14 @@
         "nxtPnextauth": "nxtPnextauth"
       },
       "namedRegex": "^/api/auth/(?<nxtPnextauth>.+?)(?:/)?$"
+    },
+    {
+      "page": "/blog/[slug]",
+      "regex": "^/blog/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/blog/(?<nxtPslug>[^/]+?)(?:/)?$"
     }
   ],
   "staticRoutes": [
@@ -51,6 +59,18 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/api/admin/stats",
+      "regex": "^/api/admin/stats(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/stats(?:/)?$"
+    },
+    {
       "page": "/api/auth/signup",
       "regex": "^/api/auth/signup(?:/)?$",
       "routeKeys": {},
@@ -63,6 +83,12 @@
       "namedRegex": "^/api/cron/daily\\-digest(?:/)?$"
     },
     {
+      "page": "/api/focus",
+      "regex": "^/api/focus(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/focus(?:/)?$"
+    },
+    {
       "page": "/api/health",
       "regex": "^/api/health(?:/)?$",
       "routeKeys": {},
@@ -73,6 +99,12 @@
       "regex": "^/api/notifications(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/notifications(?:/)?$"
+    },
+    {
+      "page": "/api/openapi.json",
+      "regex": "^/api/openapi\\.json(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/openapi\\.json(?:/)?$"
     },
     {
       "page": "/api/standups",
@@ -99,10 +131,28 @@
       "namedRegex": "^/api/upload(?:/)?$"
     },
     {
+      "page": "/blog",
+      "regex": "^/blog(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/blog(?:/)?$"
+    },
+    {
       "page": "/favicon.ico",
       "regex": "^/favicon\\.ico(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/focus",
+      "regex": "^/focus(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/focus(?:/)?$"
+    },
+    {
+      "page": "/onboarding",
+      "regex": "^/onboarding(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/onboarding(?:/)?$"
     }
   ],
   "dataRoutes": [],

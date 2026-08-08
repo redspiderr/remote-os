@@ -1,15 +1,23 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/admin/stats/route": "app/api/admin/stats/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/auth/signup/route": "app/api/auth/signup/route.js",
   "/api/cron/daily-digest/route": "app/api/cron/daily-digest/route.js",
+  "/api/focus/route": "app/api/focus/route.js",
   "/api/health/route": "app/api/health/route.js",
   "/api/notifications/route": "app/api/notifications/route.js",
+  "/api/openapi.json/route": "app/api/openapi.json/route.js",
   "/api/standups/route": "app/api/standups/route.js",
   "/api/summarize/route": "app/api/summarize/route.js",
   "/api/transcribe/route": "app/api/transcribe/route.js",
   "/api/upload/route": "app/api/upload/route.js",
+  "/blog/[slug]/page": "app/blog/[slug]/page.js",
+  "/blog/page": "app/blog/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/focus/page": "app/focus/page.js",
+  "/onboarding/page": "app/onboarding/page.js",
   "/page": "app/page.js"
 }
