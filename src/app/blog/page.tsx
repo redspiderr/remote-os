@@ -1,5 +1,11 @@
 import { getAllPosts } from "@/lib/blog";
 import BlogCard from "@/components/BlogCard";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "REMOTE OS Journal — Async Remote Work Built for Humans",
+  description: "Real stories, hard data, and practical guides for distributed teams who believe presence is overrated and output is everything. MEDINA OS blog.",
+};
 
 export default function BlogPage() {
   const posts = getAllPosts();

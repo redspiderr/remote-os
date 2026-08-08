@@ -1,6 +1,13 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import AdminAnalytics from '@/components/AdminAnalytics';
+import Image from 'next/image';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "REMOTE OS — Admin Console",
+  description: "Analytics and administration for REMOTE OS.",
+};
 
 function isAdmin(user: { email?: string | null }): boolean {
   const admins = (process.env.ADMIN_EMAILS ?? '')
@@ -57,7 +64,13 @@ export default async function AdminPage() {
         <div className="px-5 py-4 border-t border-[#2A6FBB]/10">
           <div className="flex items-center gap-2">
             {session.user.image && (
-              <img src={session.user.image} alt={session.user.name ?? ''} className="w-7 h-7 rounded-full border border-[#2A6FBB]/20 object-cover" />
+              <Image
+                src={session.user.image}
+                alt={session.user.name ?? 'Admin'}
+                width={28}
+                height={28}
+                className="rounded-full border border-[#2A6FBB]/20 object-cover"
+              />
             )}
             <div className="min-w-0">
               <p className="text-xs font-medium text-[#F9F7F2] truncate">{session.user.name ?? 'Admin'}</p>
@@ -66,7 +79,8 @@ export default async function AdminPage() {
           </div>
           <a
             href="/api/auth/signout"
-            className="mt-3 block text-center text-xs text-[#6B7280] hover:text-[#E8634B] transition-colors py-1.5 rounded-lg border border-[#2A6FBB]/10 hover:border-[#E8634B]/20"
+            aria-label="Sign out"
+            className="mt-3 block text-center text-xs text-[#6B7280] hover:text-[#E8634B] transition-colors py-1.5 rounded-lg border border-[#2A6FBB]/10 hover:border-[#E8634B]/20 focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40"
           >
             Sign out
           </a>

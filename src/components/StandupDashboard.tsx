@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -111,10 +112,12 @@ function getInitials(name: string): string {
 function Avatar({ name, src }: { name: string; src?: string | null }) {
   if (src && src.startsWith('http')) {
     return (
-      <img
+      <Image
         src={src}
         alt={name}
-        className="w-10 h-10 rounded-full object-cover border border-[#2A6FBB]/20 shrink-0"
+        width={40}
+        height={40}
+        className="rounded-full object-cover border border-[#2A6FBB]/20 shrink-0"
       />
     );
   }
@@ -431,7 +434,9 @@ export default function StandupDashboard({
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              aria-label={`Filter by ${f.label}`}
+              aria-pressed={filter === f.key}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40 ${
                 filter === f.key
                   ? 'bg-[#2A6FBB] text-white shadow-sm'
                   : 'text-[#6B7280] hover:text-[#F9F7F2]'
@@ -459,8 +464,11 @@ export default function StandupDashboard({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, transcript, or summary…"
+            aria-label="Search standups"
+            aria-describedby="search-help"
             className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280] focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="search-help" className="sr-only">Type to filter standups by contributor name, transcript content, or AI summary.</p>
         </div>
       </div>
 
@@ -520,7 +528,8 @@ export default function StandupDashboard({
               </div>
               <button
                 onClick={() => setActiveVideo(null)}
-                className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#F9F7F2] hover:bg-[#2A6FBB]/10 transition-colors"
+                aria-label="Close video modal"
+                className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#F9F7F2] hover:bg-[#2A6FBB]/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

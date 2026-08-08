@@ -29,6 +29,8 @@ export default function VideoRecorder() {
     progressLabel: '',
   });
 
+  const statusId = 'video-recorder-status';
+
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -376,6 +378,24 @@ export default function VideoRecorder() {
 
   return (
     <div className="w-full max-w-3xl mx-auto">
+      <div
+        id={statusId}
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {state.status === 'requesting'
+          ? 'Requesting camera and microphone permissions.'
+          : state.status === 'uploading'
+          ? state.progressLabel
+          : state.status === 'processing'
+          ? state.progressLabel
+          : state.status === 'done'
+          ? 'Standup saved successfully.'
+          : state.status === 'error'
+          ? `Error: ${state.errorMessage}`
+          : `Recording status: ${state.status}`}
+      </div>
       <div className="rounded-2xl overflow-hidden border border-[#2A6FBB]/20 shadow-2xl bg-[#1A1D2E]">
         {/* Video area */}
         <div className="relative aspect-video bg-black">
@@ -445,7 +465,8 @@ export default function VideoRecorder() {
           {state.status === 'idle' && (
             <button
               onClick={startPreview}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2A6FBB] text-white font-semibold text-sm hover:bg-[#1f5a9c] transition-colors shadow-lg shadow-[#2A6FBB]/20"
+              aria-label="Start camera preview"
+              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2A6FBB] text-white font-semibold text-sm hover:bg-[#1f5a9c] transition-colors shadow-lg shadow-[#2A6FBB]/20 focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -458,7 +479,8 @@ export default function VideoRecorder() {
             <>
               <button
                 onClick={startRecording}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E8634B] text-white font-semibold text-sm hover:bg-[#d9553f] transition-colors shadow-lg shadow-[#E8634B]/20"
+                aria-label="Start recording video"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E8634B] text-white font-semibold text-sm hover:bg-[#d9553f] transition-colors shadow-lg shadow-[#E8634B]/20 focus:outline-none focus:ring-2 focus:ring-[#E8634B]/40"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" />
@@ -467,7 +489,8 @@ export default function VideoRecorder() {
               </button>
               <button
                 onClick={resetAll}
-                className="px-5 py-3 rounded-xl border border-[#6B7280]/40 text-[#6B7280] text-sm font-medium hover:text-[#F9F7F2] hover:border-[#F9F7F2]/30 transition-colors"
+                aria-label="Cancel recording"
+                className="px-5 py-3 rounded-xl border border-[#6B7280]/40 text-[#6B7280] text-sm font-medium hover:text-[#F9F7F2] hover:border-[#F9F7F2]/30 transition-colors focus:outline-none focus:ring-2 focus:ring-[#6B7280]/40"
               >
                 Cancel
               </button>
@@ -478,7 +501,8 @@ export default function VideoRecorder() {
             <>
               <button
                 onClick={pauseRecording}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#6B7280] text-white font-semibold text-sm hover:bg-[#5a636e] transition-colors"
+                aria-label="Pause recording"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#6B7280] text-white font-semibold text-sm hover:bg-[#5a636e] transition-colors focus:outline-none focus:ring-2 focus:ring-[#6B7280]/40"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <rect x="6" y="4" width="4" height="16" />
@@ -488,7 +512,8 @@ export default function VideoRecorder() {
               </button>
               <button
                 onClick={stopRecording}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#E8634B] text-white font-semibold text-sm hover:bg-[#d9553f] transition-colors shadow-lg shadow-[#E8634B]/20"
+                aria-label="Stop recording"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#E8634B] text-white font-semibold text-sm hover:bg-[#d9553f] transition-colors shadow-lg shadow-[#E8634B]/20 focus:outline-none focus:ring-2 focus:ring-[#E8634B]/40"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -502,7 +527,8 @@ export default function VideoRecorder() {
             <>
               <button
                 onClick={resumeRecording}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#5A7D3F] text-white font-semibold text-sm hover:bg-[#4c6b35] transition-colors"
+                aria-label="Resume recording"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#5A7D3F] text-white font-semibold text-sm hover:bg-[#4c6b35] transition-colors focus:outline-none focus:ring-2 focus:ring-[#5A7D3F]/40"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <polygon points="5,3 19,12 5,21" />
@@ -511,7 +537,8 @@ export default function VideoRecorder() {
               </button>
               <button
                 onClick={stopRecording}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#E8634B] text-white font-semibold text-sm hover:bg-[#d9553f] transition-colors shadow-lg shadow-[#E8634B]/20"
+                aria-label="Stop recording"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#E8634B] text-white font-semibold text-sm hover:bg-[#d9553f] transition-colors shadow-lg shadow-[#E8634B]/20 focus:outline-none focus:ring-2 focus:ring-[#E8634B]/40"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -526,7 +553,8 @@ export default function VideoRecorder() {
               <a
                 href={state.downloadUrl || '#'}
                 download={`standup-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2A6FBB] text-white font-semibold text-sm hover:bg-[#1f5a9c] transition-colors shadow-lg shadow-[#2A6FBB]/20"
+                aria-label="Download recorded video"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2A6FBB] text-white font-semibold text-sm hover:bg-[#1f5a9c] transition-colors shadow-lg shadow-[#2A6FBB]/20 focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -535,7 +563,8 @@ export default function VideoRecorder() {
               </a>
               <button
                 onClick={saveToDatabase}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5A7D3F] text-white font-semibold text-sm hover:bg-[#4c6b35] transition-colors shadow-lg shadow-[#5A7D3F]/20"
+                aria-label="Save standup to database"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5A7D3F] text-white font-semibold text-sm hover:bg-[#4c6b35] transition-colors shadow-lg shadow-[#5A7D3F]/20 focus:outline-none focus:ring-2 focus:ring-[#5A7D3F]/40"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 7-13.5" />
@@ -544,7 +573,8 @@ export default function VideoRecorder() {
               </button>
               <button
                 onClick={resetAll}
-                className="px-5 py-3 rounded-xl border border-[#6B7280]/40 text-[#6B7280] text-sm font-medium hover:text-[#F9F7F2] hover:border-[#F9F7F2]/30 transition-colors"
+                aria-label="Record another standup"
+                className="px-5 py-3 rounded-xl border border-[#6B7280]/40 text-[#6B7280] text-sm font-medium hover:text-[#F9F7F2] hover:border-[#F9F7F2]/30 transition-colors focus:outline-none focus:ring-2 focus:ring-[#6B7280]/40"
               >
                 Record Another
               </button>

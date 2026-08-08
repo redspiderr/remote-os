@@ -68,8 +68,10 @@ export default function LoginForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            aria-describedby="email-help"
             className="w-full px-4 py-2.5 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280]/60 focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="email-help" className="sr-only">Enter the email address associated with your account.</p>
         </div>
 
         <div>
@@ -82,8 +84,10 @@ export default function LoginForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            aria-describedby="password-help"
             className="w-full px-4 py-2.5 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280]/60 focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="password-help" className="sr-only">Enter your password.</p>
         </div>
 
         <div className="flex items-center justify-between">

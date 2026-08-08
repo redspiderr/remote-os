@@ -104,8 +104,10 @@ export default function SignupForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Elliot Alderson"
+            aria-describedby="signup-name-help"
             className="w-full px-4 py-2.5 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280]/60 focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="signup-name-help" className="sr-only">Enter your full name.</p>
         </div>
 
         <div>
@@ -116,8 +118,10 @@ export default function SignupForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            aria-describedby="signup-email-help"
             className="w-full px-4 py-2.5 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280]/60 focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="signup-email-help" className="sr-only">Enter your email address.</p>
         </div>
 
         <div>
@@ -128,8 +132,10 @@ export default function SignupForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            aria-describedby="signup-password-help"
             className="w-full px-4 py-2.5 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280]/60 focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="signup-password-help" className="sr-only">Password must be at least 6 characters and include uppercase, numbers, and symbols for best strength.</p>
           <PasswordStrength password={password} />
         </div>
 
@@ -141,8 +147,10 @@ export default function SignupForm({
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             placeholder="••••••••"
+            aria-describedby="signup-confirm-help"
             className="w-full px-4 py-2.5 rounded-xl bg-[#1A1D2E] border border-[#2A6FBB]/10 text-sm text-[#F9F7F2] placeholder:text-[#6B7280]/60 focus:outline-none focus:border-[#2A6FBB]/40 focus:ring-1 focus:ring-[#2A6FBB]/20 transition-all"
           />
+          <p id="signup-confirm-help" className="sr-only">Re-enter your password to confirm.</p>
         </div>
 
         <button

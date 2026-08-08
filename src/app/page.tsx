@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import VideoRecorder from "@/components/VideoRecorder";
@@ -18,16 +19,19 @@ function UserBar() {
   return (
     <div className="w-full max-w-5xl mb-6 flex items-center justify-end gap-3">
       {session.user.image && (
-        <img
+        <Image
           src={session.user.image}
-          alt={session.user.name || ""}
-          className="w-8 h-8 rounded-full border border-[#2A6FBB]/20 object-cover"
+          alt={session.user.name || "User avatar"}
+          width={32}
+          height={32}
+          className="rounded-full border border-[#2A6FBB]/20 object-cover"
         />
       )}
       <span className="text-sm text-[#F9F7F2] font-medium">{session.user.name}</span>
       <a
         href="/api/auth/signout"
-        className="text-xs text-[#6B7280] hover:text-[#E8634B] transition-colors"
+        aria-label="Sign out"
+        className="text-xs text-[#6B7280] hover:text-[#E8634B] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40 rounded"
       >
         Sign out
       </a>
@@ -114,7 +118,9 @@ export default function Home() {
                 <button
                   id="tab-record"
                   onClick={() => setActiveTab("record")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  aria-label="Switch to Record tab"
+                  aria-pressed={activeTab === "record"}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40 ${
                     activeTab === "record"
                       ? "bg-[#2A6FBB] text-white shadow-lg shadow-[#2A6FBB]/20"
                       : "text-[#6B7280] hover:text-[#F9F7F2]"
@@ -128,7 +134,9 @@ export default function Home() {
                 <button
                   id="tab-dashboard"
                   onClick={() => setActiveTab("dashboard")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  aria-label="Switch to Dashboard tab"
+                  aria-pressed={activeTab === "dashboard"}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#2A6FBB]/40 ${
                     activeTab === "dashboard"
                       ? "bg-[#2A6FBB] text-white shadow-lg shadow-[#2A6FBB]/20"
                       : "text-[#6B7280] hover:text-[#F9F7F2]"

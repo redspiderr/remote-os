@@ -23,6 +23,13 @@ const merriweather = Merriweather({
 export const metadata: Metadata = {
   title: "REMOTE OS — Async Video Standups",
   description: "Record async standup videos. Built for MEDINA OS.",
+  keywords: ["async standups", "remote work", "video standups", "MEDINA OS", "REMOTE OS"],
+  authors: [{ name: "MEDINA OS" }],
+  openGraph: {
+    title: "REMOTE OS — Async Video Standups",
+    description: "Record async standup videos. Built for MEDINA OS.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
