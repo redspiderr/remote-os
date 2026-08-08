@@ -51,7 +51,8 @@ setInterval(() => {
 export async function rateLimitMiddleware(
   request: NextRequest
 ): Promise<NextResponse | null> {
-  const ip = request.ip ?? '127.0.0.1';
+  const forwarded = request.headers.get('x-forwarded-for');
+  const ip = forwarded?.split(',')[0]?.trim() ?? '127.0.0.1';
   const path = request.nextUrl.pathname;
   
   // Different limits for different endpoints

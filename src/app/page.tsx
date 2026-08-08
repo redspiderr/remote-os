@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import VideoRecorder from "@/components/VideoRecorder";
 import StandupDashboard from "@/components/StandupDashboard";
 import LoginForm from "@/components/LoginForm";
 import SignupForm from "@/components/SignupForm";
+import TutorialOverlay, { hasSeenTutorial } from "@/components/TutorialOverlay";
+import { isOnboardingComplete } from "@/components/Onboarding";
 
 type Tab = "record" | "dashboard";
 
@@ -34,15 +37,60 @@ function UserBar() {
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("record");
   const [showSignup, setShowSignup] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const isAuth = status === "authenticated";
 
+  useEffect(() => {
+    if (status === "loading") return;
+    if (isAuth && !isOnboardingComplete()) {
+      router.replace("/onboarding");
+      return;
+    }
+    if (isAuth && !hasSeenTutorial("remote-os-home-tutorial")) {
+      // small delay so UI renders before attaching overlays
+      const t = setTimeout(() => setShowTutorial(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [status, isAuth, router]);
+
+  const tutorialSteps = [
+    {
+      targetId: "tab-record",
+      title: "Record Standups",
+      content: "Switch to the Record tab to capture your daily 90-second video update. It auto-transcribes and summarizes with AI.",
+      placement: "bottom" as const,
+    },
+    {
+      targetId: "tab-dashboard",
+      title: "Team Dashboard",
+      content: "Browse your team's standups here. Filter by today, this week, or search transcripts and summaries.",
+      placement: "bottom" as const,
+    },
+    {
+      targetId: "header-badge",
+      title: "Health at a Glance",
+      content: "Track team participation, average duration, and submission trends without a single meeting.",
+      placement: "bottom" as const,
+    },
+  ];
+
   return (
     <div className="flex flex-col flex-1 items-center justify-start py-10 px-4 sm:px-6 lg:px-8 min-h-full">
+      {isAuth && showTutorial && (
+        <TutorialOverlay
+          steps={tutorialSteps}
+          storageKey="remote-os-home-tutorial"
+          onComplete={() => setShowTutorial(false)}
+          onSkip={() => setShowTutorial(false)}
+        />
+      )}
+
       {/* Header */}
-      <header className="w-full max-w-5xl mb-8 text-center">
+      <header id="header-badge" className="w-full max-w-5xl mb-8 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2A6FBB]/10 border border-[#2A6FBB]/20 text-[#2A6FBB] text-xs font-semibold mb-4">
           <span className="w-2 h-2 rounded-full bg-[#5A7D3F] animate-pulse" />
           MVP v0.5.0
@@ -64,6 +112,7 @@ export default function Home() {
             <div className="flex items-center justify-center">
               <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-[#1A1D2E] border border-[#2A6FBB]/10">
                 <button
+                  id="tab-record"
                   onClick={() => setActiveTab("record")}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     activeTab === "record"
@@ -77,6 +126,7 @@ export default function Home() {
                   Record
                 </button>
                 <button
+                  id="tab-dashboard"
                   onClick={() => setActiveTab("dashboard")}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     activeTab === "dashboard"

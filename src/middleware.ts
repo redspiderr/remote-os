@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { rateLimitMiddleware } from "@/lib/rate-limit";
 
-const PUBLIC_PATHS = ["/api/auth", "/api/health", "/_next", "/favicon.ico", "/images", "/public", "/blog"];
+const PUBLIC_PATHS = ["/api/auth", "/api/health", "/_next", "/favicon.ico", "/images", "/public", "/blog", "/onboarding"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
