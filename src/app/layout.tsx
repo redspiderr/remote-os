@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Merriweather } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
+import RootProviders from "@/components/RootProviders";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0B0D17] text-[#F9F7F2]">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <RootProviders>{children}</RootProviders>
+        </AuthProvider>
       </body>
     </html>
   );
