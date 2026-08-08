@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, readFile, stat, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { auth } from '@/lib/auth';
+
+// Storage configuration
+// In production, use AWS S3 or Cloudflare R2
+// For now, store in local filesystem or return signed URL
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const UPLOAD_DIR = join('/tmp', 'standups');
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,70 +22,111 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    await mkdir(UPLOAD_DIR, { recursive: true });
+    // Validate file type
+    const allowedTypes = ['video/webm', 'video/mp4', 'video/quicktime'];
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: 'Invalid file type. Allowed: webm, mp4, mov' },
+        { status: 400 }
+      );
+    }
 
-    const ext = file.name?.split('.').pop() || 'webm';
-    const filename = `${session.user.id}-${Date.now()}.${ext}`;
-    const filepath = join(UPLOAD_DIR, filename);
+    // Validate size (max 100MB for videos)
+    const MAX_SIZE = 100 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { error: 'File too large. Max 100MB.' },
+        { status: 413 }
+      );
+    }
 
     const arrayBuffer = await file.arrayBuffer();
-    await writeFile(filepath, Buffer.from(arrayBuffer));
+    const buffer = Buffer.from(arrayBuffer);
 
-    const videoUrl = `/api/upload/video?f=${encodeURIComponent(filename)}`;
+    // Check if S3 is configured
+    const s3Bucket = process.env.S3_BUCKET_NAME;
+    const s3Endpoint = process.env.S3_ENDPOINT;
+    const s3AccessKey = process.env.S3_ACCESS_KEY_ID;
+    const s3SecretKey = process.env.S3_SECRET_ACCESS_KEY;
 
-    return NextResponse.json({ video_url: videoUrl }, { status: 200 });
+    let videoUrl: string;
+
+    if (s3Bucket && s3Endpoint && s3AccessKey && s3SecretKey) {
+      // Upload to S3/R2
+      videoUrl = await uploadToS3(buffer, file.name, file.type, s3Bucket, s3Endpoint, s3AccessKey, s3SecretKey);
+    } else {
+      // Fallback: Save to local filesystem (for development)
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
+      await fs.mkdir(uploadDir, { recursive: true });
+      
+      const fileName = `${Date.now()}-${file.name || 'recording.webm'}`;
+      const filePath = path.join(uploadDir, fileName);
+      await fs.writeFile(filePath, buffer);
+      
+      videoUrl = `/uploads/videos/${fileName}`;
+      console.log(`Video saved locally: ${filePath}`);
+    }
+
+    return NextResponse.json({
+      success: true,
+      videoUrl,
+      size: file.size,
+      type: file.type,
+      storage: s3Bucket ? 's3' : 'local',
+    }, { status: 201 });
+
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('Upload error:', message);
-    return NextResponse.json({ error: 'Upload failed', message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Upload failed', message },
+      { status: 500 }
+    );
   }
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const filename = searchParams.get('f');
+async function uploadToS3(
+  buffer: Buffer,
+  fileName: string,
+  contentType: string,
+  bucket: string,
+  endpoint: string,
+  accessKeyId: string,
+  secretAccessKey: string
+): Promise<string> {
+  // S3 upload implementation using AWS SDK v3
+  // For production, install @aws-sdk/client-s3
+  
+  const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+  
+  const s3Client = new S3Client({
+    endpoint,
+    region: process.env.S3_REGION || 'auto',
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+    forcePathStyle: true,
+  });
 
-    if (!filename) {
-      return NextResponse.json({ error: 'Missing filename' }, { status: 400 });
-    }
+  const key = `videos/${Date.now()}-${fileName}`;
 
-    // Security: sanitize filename to prevent directory traversal
-    const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '');
-    if (!safeName) {
-      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
-    }
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+      ACL: 'public-read',
+    })
+  );
 
-    const filepath = join(UPLOAD_DIR, safeName);
-    const stats = await stat(filepath);
-
-    if (!stats.isFile()) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-
-    const data = await readFile(filepath);
-
-    // Infer content type from extension
-    const ext = safeName.split('.').pop()?.toLowerCase() || 'webm';
-    const contentTypeMap: Record<string, string> = {
-      webm: 'video/webm',
-      mp4: 'video/mp4',
-      mov: 'video/quicktime',
-      mkv: 'video/x-matroska',
-    };
-    const contentType = contentTypeMap[ext] || 'application/octet-stream';
-
-    return new NextResponse(data, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Content-Length': String(stats.size),
-        'Cache-Control': 'public, max-age=3600',
-      },
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('Video serve error:', message);
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  }
+  // Return public URL
+  const publicUrl = `${endpoint}/${bucket}/${key}`;
+  console.log(`Video uploaded to S3: ${publicUrl}`);
+  
+  return publicUrl;
 }

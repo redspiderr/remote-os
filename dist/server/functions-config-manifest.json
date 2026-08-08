@@ -1,6 +1,11 @@
 {
   "version": 1,
   "functions": {
-    "/api/transcribe": {}
+    "/api/cron/daily-digest": {},
+    "/api/notifications": {},
+    "/api/standups": {},
+    "/api/summarize": {},
+    "/api/transcribe": {},
+    "/api/upload": {}
   }
 }

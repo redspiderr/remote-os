@@ -57,16 +57,46 @@
       "namedRegex": "^/api/auth/signup(?:/)?$"
     },
     {
+      "page": "/api/cron/daily-digest",
+      "regex": "^/api/cron/daily\\-digest(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cron/daily\\-digest(?:/)?$"
+    },
+    {
       "page": "/api/health",
       "regex": "^/api/health(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/health(?:/)?$"
     },
     {
+      "page": "/api/notifications",
+      "regex": "^/api/notifications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/notifications(?:/)?$"
+    },
+    {
+      "page": "/api/standups",
+      "regex": "^/api/standups(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/standups(?:/)?$"
+    },
+    {
+      "page": "/api/summarize",
+      "regex": "^/api/summarize(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/summarize(?:/)?$"
+    },
+    {
       "page": "/api/transcribe",
       "regex": "^/api/transcribe(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/transcribe(?:/)?$"
+    },
+    {
+      "page": "/api/upload",
+      "regex": "^/api/upload(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/upload(?:/)?$"
     },
     {
       "page": "/favicon.ico",

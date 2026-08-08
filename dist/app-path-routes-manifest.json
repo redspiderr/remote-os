@@ -3,8 +3,13 @@
   "/_not-found/page": "/_not-found",
   "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
   "/api/auth/signup/route": "/api/auth/signup",
+  "/api/cron/daily-digest/route": "/api/cron/daily-digest",
   "/api/health/route": "/api/health",
+  "/api/notifications/route": "/api/notifications",
+  "/api/standups/route": "/api/standups",
+  "/api/summarize/route": "/api/summarize",
   "/api/transcribe/route": "/api/transcribe",
+  "/api/upload/route": "/api/upload",
   "/favicon.ico/route": "/favicon.ico",
   "/page": "/"
 }

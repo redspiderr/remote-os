@@ -45,7 +45,7 @@ export default function Home() {
       <header className="w-full max-w-5xl mb-8 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2A6FBB]/10 border border-[#2A6FBB]/20 text-[#2A6FBB] text-xs font-semibold mb-4">
           <span className="w-2 h-2 rounded-full bg-[#5A7D3F] animate-pulse" />
-          MVP v0.3.0
+          MVP v0.5.0
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#F9F7F2] mb-3">
           Async Video Standups
