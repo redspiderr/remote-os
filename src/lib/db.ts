@@ -13,3 +13,10 @@ export const AI_INSIGHTS_TABLE = 'ai_insights';
 
 // ─── Collaboration Schema (see db/schema.sql for full DDL) ─────────
 // teams, team_members, comments, reactions
+
+// ─── Calendar Schema ────────────────────────────────────────────────
+export const CALENDAR_INTEGRATIONS_TABLE = 'calendar_integrations';
+export const CALENDAR_EVENTS_TABLE = 'calendar_events';
+
+// ─── Manager Notes Schema ───────────────────────────────────────────
+export const MANAGER_NOTES_TABLE = 'manager_notes';

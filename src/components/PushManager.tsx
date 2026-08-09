@@ -16,7 +16,7 @@ async function subscribePush(): Promise<void> {
     applicationServerKey: urlBase64ToUint8Array(
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
         'BEl62iM4Uq5Lf9RdB9k3uR0uXq5Qf5R0uXq5Qf5R0uXq5Qf5R0uXq5Qf5R0uXq5Qf5R0uXq5Qf5R0uXq5Qf5R0uXq5Qf5R0uXq5Q='
-    ),
+    ) as BufferSource,
   });
   await fetch('/api/notifications', {
     method: 'POST',

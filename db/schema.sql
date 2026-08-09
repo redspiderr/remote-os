@@ -223,3 +223,17 @@ CREATE INDEX IF NOT EXISTS idx_mood_logs_created_at ON mood_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_ai_insights_user_id ON ai_insights(user_id);
 CREATE INDEX IF NOT EXISTS idx_ai_insights_type ON ai_insights(type);
 CREATE INDEX IF NOT EXISTS idx_ai_insights_read ON ai_insights(read);
+
+-- ─── Manager Notes ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS manager_notes (
+  id uuid primary key default gen_random_uuid(),
+  manager_id uuid references users(id) on delete cascade,
+  member_id uuid references users(id) on delete cascade,
+  note text not null,
+  tags text[],
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_manager_notes_member_id ON manager_notes(member_id);
+CREATE INDEX IF NOT EXISTS idx_manager_notes_manager_id ON manager_notes(manager_id);
