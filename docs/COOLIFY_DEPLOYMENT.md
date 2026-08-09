@@ -94,6 +94,8 @@ If you prefer using Coolify's managed PostgreSQL and Redis instances:
   ```
 - **Database Migrations**:  
   When using `docker-compose.coolify.yml`, database tables are initialized automatically from `db/schema.sql`.
+- **Build-Time Environment Variables (`NODE_ENV=production`)**:  
+  Coolify automatically injects `NODE_ENV=production` as a build argument. The `Dockerfile` explicitly enforces `ENV NODE_ENV=development` during the `deps` stage so `devDependencies` (TypeScript, build tools) are installed for `npm run build`, and then prunes `devDependencies` before assembling the final runner stage.
 
 ---
 
