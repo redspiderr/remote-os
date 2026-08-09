@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { reminderTemplate } from "@/lib/email-templates";
+import { logSecurityEvent } from "@/lib/security-logger";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -16,6 +19,29 @@ function getTodayRange(): { start: Date; end: Date } {
 // ─── POST /api/notifications/remind ─────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX: Add authentication check
+    const session = await auth();
+    if (!session?.user?.id) {
+      await logSecurityEvent({
+        event_type: 'auth_failure',
+        severity: 'warning',
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        endpoint: '/api/notifications/remind',
+        method: 'POST',
+        status_code: 401,
+      });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SECURITY FIX: Rate limiting — max 1 reminder request per user per hour
+    const limitResult = rateLimit(request, { maxRequests: 1, windowMs: 60 * 60 * 1000 });
+    if (!limitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Try again later.' },
+        { status: 429 }
+      );
+    }
+
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
     // Optional explicit list of user IDs to remind
@@ -109,8 +135,9 @@ export async function POST(request: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Remind POST error:", message);
+    // SECURITY FIX: Generic error message
     return NextResponse.json(
-      { error: "Internal server error", message },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
