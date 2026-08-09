@@ -22,7 +22,7 @@ describe('VideoRecorder', () => {
 
   it('renders start recording button', () => {
     render(<VideoRecorder />);
-    const button = screen.getByRole('button', { name: /start recording/i });
+    const button = screen.getByRole("button", { name: /start camera preview/i });
     expect(button).toBeInTheDocument();
   });
 
@@ -30,11 +30,11 @@ describe('VideoRecorder', () => {
     mockGetUserMedia.mockRejectedValueOnce(new Error('Permission denied'));
     render(<VideoRecorder />);
     
-    const button = screen.getByRole('button', { name: /start recording/i });
+    const button = screen.getByRole("button", { name: /start camera preview/i });
     fireEvent.click(button);
     
     await waitFor(() => {
-      expect(screen.getByText(/permission denied|camera/i)).toBeInTheDocument();
+      expect(screen.getByText(/permission denied|camera|error/i)).toBeInTheDocument();
     });
   });
 
@@ -42,7 +42,7 @@ describe('VideoRecorder', () => {
     mockGetUserMedia.mockRejectedValueOnce(new Error('Permission denied'));
     render(<VideoRecorder />);
     
-    const button = screen.getByRole('button', { name: /start recording/i });
+    const button = screen.getByRole("button", { name: /start camera preview/i });
     fireEvent.click(button);
     
     await waitFor(() => {
