@@ -57,7 +57,7 @@ describe('LoginForm', () => {
   });
 
   it('calls signIn with credentials on submit', async () => {
-    vi.mocked(signIn).mockResolvedValueOnce({ error: null, code: null, ok: true, status: 200, url: '/' } as any);
+    vi.mocked(signIn).mockResolvedValueOnce({ error: undefined, code: undefined, ok: true, status: 200, url: '/' } as any);
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
@@ -90,7 +90,7 @@ describe('LoginForm', () => {
     vi.mocked(signIn).mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => resolve({ error: null, code: null, ok: true, status: 200, url: '/' }), 100);
+          setTimeout(() => resolve({ error: undefined, code: undefined, ok: true, status: 200, url: '/' }), 100);
         }),
     );
 
