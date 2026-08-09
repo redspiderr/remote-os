@@ -6,7 +6,7 @@ import { decryptAppCredentials, getConnectedApp } from "@/lib/integrations/db";
 
 const postSchema = z.object({
   content: z.string().min(1),
-  embeds: z.array(z.record(z.unknown())).optional(),
+  embeds: z.array(z.any()).optional(),
   username: z.string().optional(),
 });
 
