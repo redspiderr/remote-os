@@ -102,3 +102,44 @@ ALTER TABLE standups
 ALTER TABLE standups
     ADD CONSTRAINT chk_standups_status
     CHECK (status IN ('pending', 'processing', 'completed', 'failed'));
+
+-- ─── Security Logs ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS security_logs (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_type  VARCHAR(50) NOT NULL,
+    severity    VARCHAR(20) DEFAULT 'info',
+    user_id     UUID REFERENCES users(id) ON DELETE SET NULL,
+    email       VARCHAR(255),
+    ip_address  INET,
+    user_agent  TEXT,
+    endpoint    TEXT,
+    method      VARCHAR(10),
+    status_code INTEGER,
+    details     JSONB DEFAULT '{}',
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_logs_event_type ON security_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_logs_created_at ON security_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_security_logs_user_id ON security_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_logs_ip_address ON security_logs(ip_address);
+
+-- ─── Audit Logs ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    table_name  VARCHAR(100) NOT NULL,
+    record_id   UUID NOT NULL,
+    action      VARCHAR(20) NOT NULL,
+    old_values  JSONB,
+    new_values  JSONB,
+    user_id     UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_email  VARCHAR(255),
+    ip_address  INET,
+    user_agent  TEXT,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_table_name ON audit_logs(table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_record_id ON audit_logs(record_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);

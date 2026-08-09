@@ -10,6 +10,7 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX: Add authentication check
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +20,10 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      );
     }
 
     // Validate file type
@@ -43,6 +47,11 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // SECURITY FIX: Sanitize filename to prevent path traversal
+    const originalName = file.name || 'recording.webm';
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9._-]/g, '');
+    const safeFileName = `${Date.now()}-${sanitizedName}`;
+
     // Check if S3 is configured
     const s3Bucket = process.env.S3_BUCKET_NAME;
     const s3Endpoint = process.env.S3_ENDPOINT;
@@ -52,21 +61,19 @@ export async function POST(request: NextRequest) {
     let videoUrl: string;
 
     if (s3Bucket && s3Endpoint && s3AccessKey && s3SecretKey) {
-      // Upload to S3/R2
-      videoUrl = await uploadToS3(buffer, file.name, file.type, s3Bucket, s3Endpoint, s3AccessKey, s3SecretKey);
+      videoUrl = await uploadToS3(buffer, safeFileName, file.type, s3Bucket, s3Endpoint, s3AccessKey, s3SecretKey);
     } else {
-      // Fallback: Save to local filesystem (for development)
       const fs = await import('fs/promises');
       const path = await import('path');
       
+      // SECURITY FIX: Use safe filename, not user-provided name
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
       await fs.mkdir(uploadDir, { recursive: true });
       
-      const fileName = `${Date.now()}-${file.name || 'recording.webm'}`;
-      const filePath = path.join(uploadDir, fileName);
+      const filePath = path.join(uploadDir, safeFileName);
       await fs.writeFile(filePath, buffer);
       
-      videoUrl = `/uploads/videos/${fileName}`;
+      videoUrl = `/uploads/videos/${safeFileName}`;
       console.log(`Video saved locally: ${filePath}`);
     }
 
@@ -97,9 +104,6 @@ async function uploadToS3(
   accessKeyId: string,
   secretAccessKey: string
 ): Promise<string> {
-  // S3 upload implementation using AWS SDK v3
-  // For production, install @aws-sdk/client-s3
-  
   const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
   
   const s3Client = new S3Client({
@@ -124,7 +128,6 @@ async function uploadToS3(
     })
   );
 
-  // Return public URL
   const publicUrl = `${endpoint}/${bucket}/${key}`;
   console.log(`Video uploaded to S3: ${publicUrl}`);
   

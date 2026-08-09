@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { ZodError, z } from 'zod';
+import { auditLog } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -22,8 +23,13 @@ const updateSchema = z.object({
   duration: z.number().optional(),
 });
 
+function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  return forwarded?.split(',')[0]?.trim() ?? '127.0.0.1';
+}
+
 // ─── GET ──────────────────────────────────────────────────────────────
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -73,6 +79,17 @@ export async function GET() {
         key_achievements: r.key_achievements ?? [],
       }));
 
+      await auditLog({
+        tableName: 'standups',
+        recordId: 'LIST',
+        action: 'READ',
+        userId: session.user.id,
+        userEmail: session.user.email ?? null,
+        ip: getClientIp(request),
+        userAgent: request.headers.get('user-agent') ?? null,
+        newValues: { count: rows.length },
+      });
+
       return NextResponse.json({ standups: rows }, { status: 200 });
     } finally {
       client.release();
@@ -118,6 +135,17 @@ export async function POST(request: NextRequest) {
       );
 
       const row = result.rows[0];
+
+      await auditLog({
+        tableName: 'standups',
+        recordId: row.id,
+        action: 'CREATE',
+        userId: session.user.id,
+        userEmail: session.user.email ?? null,
+        ip: getClientIp(request),
+        userAgent: request.headers.get('user-agent') ?? null,
+        newValues: { video_url: row.video_url, status: row.status, transcript: row.transcript, summary: row.summary },
+      });
 
       return NextResponse.json(
         {
@@ -197,11 +225,28 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
 
+      // Fetch old values for audit
+      const oldRes = await client.query('SELECT * FROM standups WHERE id = $1', [id]);
+      const oldValues = oldRes.rows[0] ?? null;
+
       values.push(id);
       const query = `UPDATE standups SET ${setParts.join(', ')} WHERE id = $${idx} RETURNING *`;
       const result = await client.query(query, values);
 
       const row = result.rows[0];
+
+      await auditLog({
+        tableName: 'standups',
+        recordId: id,
+        action: 'UPDATE',
+        userId: session.user.id,
+        userEmail: session.user.email ?? null,
+        ip: getClientIp(request),
+        userAgent: request.headers.get('user-agent') ?? null,
+        oldValues: oldValues ? { status: oldValues.status, transcript: oldValues.transcript, summary: oldValues.summary, duration: oldValues.duration } : null,
+        newValues: { status: row.status, transcript: row.transcript, summary: row.summary, duration: row.duration },
+      });
+
       return NextResponse.json(
         {
           id: row.id,
@@ -221,6 +266,54 @@ export async function PATCH(request: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('Standups PATCH error:', message);
+    return NextResponse.json({ error: 'Internal server error', message }, { status: 500 });
+  }
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
+
+    const client = await db.pool.connect();
+    try {
+      const ownerRes = await client.query('SELECT * FROM standups WHERE id = $1', [id]);
+      if (ownerRes.rows.length === 0) {
+        return NextResponse.json({ error: 'Standup not found' }, { status: 404 });
+      }
+      if (ownerRes.rows[0].user_id !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      await client.query('DELETE FROM standups WHERE id = $1', [id]);
+
+      await auditLog({
+        tableName: 'standups',
+        recordId: id,
+        action: 'DELETE',
+        userId: session.user.id,
+        userEmail: session.user.email ?? null,
+        ip: getClientIp(request),
+        userAgent: request.headers.get('user-agent') ?? null,
+        oldValues: ownerRes.rows[0],
+      });
+
+      return NextResponse.json({ success: true }, { status: 200 });
+    } finally {
+      client.release();
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Standups DELETE error:', message);
     return NextResponse.json({ error: 'Internal server error', message }, { status: 500 });
   }
 }

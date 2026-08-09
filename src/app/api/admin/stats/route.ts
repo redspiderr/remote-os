@@ -10,6 +10,8 @@ import {
   toISOUTC,
   DATE_RANGES,
 } from '@/lib/analytics';
+import { getSecuritySummary } from '@/lib/security-logger';
+import { getIntrusionSnapshot } from '@/lib/intrusion-detection';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -141,6 +143,10 @@ export async function GET(request: Request) {
         paidUsers: 0,
       };
 
+      // ─── Security snapshot ──────────────────────────────────────────
+      const security = await getSecuritySummary(24);
+      const intrusion = getIntrusionSnapshot();
+
       return NextResponse.json(
         {
           range: range.label,
@@ -162,6 +168,8 @@ export async function GET(request: Request) {
           },
           leaderboard,
           revenue,
+          security,
+          intrusion,
         },
         { status: 200 }
       );
