@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         }
         if (ownershipRes.rows[0].user_id !== session.user.id) {
           await logSecurityEvent({
-            eventType: 'unauthorized_access',
+            eventType: 'permission_denied',
             severity: 'warning',
             user_id: session.user.id,
             ip: request.headers.get('x-forwarded-for') || 'unknown',

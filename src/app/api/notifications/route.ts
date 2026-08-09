@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // SECURITY FIX: Rate limiting — max 1 reminder request per user per hour
     const forwarded = request.headers.get('x-forwarded-for');
     const clientIp = forwarded?.split(',')[0]?.trim() ?? '127.0.0.1';
-    const limitResult = rateLimit(clientIp, { maxRequests: 1, windowMs: 60 * 60 * 1000 });
+    const limitResult = rateLimit(clientIp, 1, 3600); // 1 request per hour
     if (!limitResult.allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Try again later.' },
