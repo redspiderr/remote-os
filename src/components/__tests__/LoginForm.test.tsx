@@ -90,7 +90,7 @@ describe('LoginForm', () => {
     vi.mocked(signIn).mockImplementation(
       () =>
         new Promise((resolve) => {
-          setTimeout(() => resolve({ error: null, ok: true, status: 200, url: '/' }), 100);
+          setTimeout(() => resolve({ error: null, code: null, ok: true, status: 200, url: '/' }), 100);
         }),
     );
 

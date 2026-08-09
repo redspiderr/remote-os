@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           await logSecurityEvent({
             eventType: 'permission_denied',
             severity: 'warning',
-            user_id: session.user.id,
+            userId: session.user.id,
             ip: request.headers.get('x-forwarded-for') || 'unknown',
             endpoint: '/api/transcribe',
             method: 'POST',
