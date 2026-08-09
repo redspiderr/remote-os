@@ -20,3 +20,7 @@ export const CALENDAR_EVENTS_TABLE = 'calendar_events';
 
 // ─── Manager Notes Schema ───────────────────────────────────────────
 export const MANAGER_NOTES_TABLE = 'manager_notes';
+
+// ─── Integrations Schema ─────────────────────────────────────────────
+export const CONNECTED_APPS_TABLE = 'connected_apps';
+export const INTEGRATION_WEBHOOKS_TABLE = 'integration_webhooks';
