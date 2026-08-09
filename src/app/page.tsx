@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import VideoRecorder from "@/components/VideoRecorder";
 import StandupDashboard from "@/components/StandupDashboard";
+import MobileDashboard from "@/components/MobileDashboard";
+import OfflineRecorder from "@/components/OfflineRecorder";
 import LoginForm from "@/components/LoginForm";
 import SignupForm from "@/components/SignupForm";
 import TutorialOverlay, { hasSeenTutorial } from "@/components/TutorialOverlay";
@@ -153,7 +155,19 @@ export default function Home() {
 
           {/* Content */}
           <main className="w-full max-w-5xl">
-            {activeTab === "record" ? <VideoRecorder /> : <StandupDashboard />}
+            {activeTab === "record" ? (
+              <>
+                <div className="hidden md:block"><VideoRecorder /></div>
+                <div className="md:hidden"><OfflineRecorder /></div>
+              </>
+            ) : (
+              <>
+                <div className="hidden md:block"><StandupDashboard /></div>
+                <div className="md:hidden">
+                  <MobileDashboard standups={[]} onPlay={(s) => console.log('play', s)} />
+                </div>
+              </>
+            )}
           </main>
         </>
       ) : (

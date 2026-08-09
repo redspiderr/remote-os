@@ -18,6 +18,60 @@ Return this exact shape:
   "key_achievements": ["list of completed work or wins the person mentioned, otherwise empty array"]
 }`;
 
+export async function gpt4oChatCompletion<T>(systemPrompt: string, userContent: string): Promise<T> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not set');
+  }
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent },
+      ],
+      temperature: 0.5,
+      max_tokens: 1200,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OpenAI API error ${res.status}: ${text}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: Array<{
+      message?: {
+        content?: string;
+      };
+    }>;
+  };
+
+  const content = data.choices?.[0]?.message?.content?.trim() ?? '';
+  if (!content) {
+    throw new Error('OpenAI returned empty content');
+  }
+
+  const cleaned = content
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch (err) {
+    throw new Error(`Failed to parse OpenAI JSON: ${err instanceof Error ? err.message : String(err)}. Raw: ${content}`);
+  }
+}
+
 export async function summarizeTranscript(transcript: string): Promise<SummaryResult> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

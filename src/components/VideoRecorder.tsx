@@ -28,6 +28,7 @@ export default function VideoRecorder() {
     downloadUrl: null,
     progressLabel: '',
   });
+  const [touchStartTime, setTouchStartTime] = useState(0);
 
   const statusId = 'video-recorder-status';
 
@@ -398,7 +399,24 @@ export default function VideoRecorder() {
       </div>
       <div className="rounded-2xl overflow-hidden border border-[#2A6FBB]/20 shadow-2xl bg-[#1A1D2E]">
         {/* Video area */}
-        <div className="relative aspect-video bg-black">
+        <div
+          className="relative aspect-video bg-black touch-pan-y"
+          onTouchStart={(e) => {
+            if (e.touches.length === 1) {
+              setTouchStartTime(Date.now());
+            }
+          }}
+          onTouchEnd={(e) => {
+            const diff = Date.now() - touchStartTime;
+            if (diff < 200 && e.changedTouches.length === 1) {
+              // Tap to toggle controls
+              if (videoRef.current) {
+                if (videoRef.current.paused) videoRef.current.play();
+                else videoRef.current.pause();
+              }
+            }
+          }}
+        >
           <video
             ref={videoRef}
             className="w-full h-full object-cover"

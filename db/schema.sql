@@ -88,6 +88,34 @@ CREATE TABLE IF NOT EXISTS focus_sessions (
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_id ON focus_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_created_at ON focus_sessions(created_at);
 
+-- Team Members
+CREATE TABLE IF NOT EXISTS team_members (
+    team_id    UUID REFERENCES teams(id) ON DELETE CASCADE,
+    user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
+    role       VARCHAR(50) DEFAULT 'member',
+    joined_at  TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (team_id, user_id)
+);
+
+-- Comments on standups
+CREATE TABLE IF NOT EXISTS comments (
+    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    standup_id UUID NOT NULL REFERENCES standups(id) ON DELETE CASCADE,
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content    TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Reactions on comments
+CREATE TABLE IF NOT EXISTS reactions (
+    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    comment_id UUID NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emoji      TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (comment_id, user_id, emoji)
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_team_id ON users(team_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
@@ -95,6 +123,12 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_standups_user_id ON standups(user_id);
 CREATE INDEX IF NOT EXISTS idx_standups_created_at ON standups(created_at);
 CREATE INDEX IF NOT EXISTS idx_standups_status ON standups(status);
+CREATE INDEX IF NOT EXISTS idx_team_members_team_id ON team_members(team_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_standup_id ON comments(standup_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_reactions_comment_id ON reactions(comment_id);
+CREATE INDEX IF NOT EXISTS idx_reactions_user_id ON reactions(user_id);
 
 -- Status check enum constraint helper
 ALTER TABLE standups
@@ -143,3 +177,49 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_table_name ON audit_logs(table_name);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_record_id ON audit_logs(record_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+
+-- ─── Goals ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS goals (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title       VARCHAR(500) NOT NULL,
+    description TEXT,
+    category    VARCHAR(50) DEFAULT 'productivity',
+    deadline    TIMESTAMPTZ,
+    status      VARCHAR(20) DEFAULT 'active', -- active, completed, abandoned
+    progress    INTEGER DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── Mood Logs ──────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS mood_logs (
+    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mood       INTEGER NOT NULL CHECK (mood BETWEEN 1 AND 5),
+    energy     INTEGER CHECK (energy BETWEEN 1 AND 5),
+    notes      TEXT,
+    standup_id UUID REFERENCES standups(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─── AI Insights ────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_insights (
+    id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type       VARCHAR(50) NOT NULL, -- weekly_summary, burnout_alert, productivity_tip, goal_progress
+    title      VARCHAR(255) NOT NULL,
+    content    TEXT NOT NULL,
+    metadata   JSONB DEFAULT '{}',
+    read       BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- AI Coach indexes
+CREATE INDEX IF NOT EXISTS idx_goals_user_id ON goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_goals_status ON goals(status);
+CREATE INDEX IF NOT EXISTS idx_mood_logs_user_id ON mood_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_mood_logs_created_at ON mood_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_user_id ON ai_insights(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_type ON ai_insights(type);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_read ON ai_insights(read);

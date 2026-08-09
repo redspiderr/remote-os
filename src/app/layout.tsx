@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Merriweather } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import RootProviders from "@/components/RootProviders";
+import PWAProvider from "@/components/PWAProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,15 @@ export const metadata: Metadata = {
     description: "Record async standup videos. Built for MEDINA OS.",
     type: "website",
   },
+  manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2A6FBB",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -43,9 +53,14 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body className="min-h-full flex flex-col bg-[#0B0D17] text-[#F9F7F2]">
         <AuthProvider>
-          <RootProviders>{children}</RootProviders>
+          <RootProviders>
+            <PWAProvider>{children}</PWAProvider>
+          </RootProviders>
         </AuthProvider>
       </body>
     </html>
