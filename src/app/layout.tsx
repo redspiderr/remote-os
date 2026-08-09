@@ -4,6 +4,7 @@ import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
 import RootProviders from "@/components/RootProviders";
 import PWAProvider from "@/components/PWAProvider";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,7 +60,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#0B0D17] text-[#F9F7F2]">
         <AuthProvider>
           <RootProviders>
-            <PWAProvider>{children}</PWAProvider>
+            <PWAProvider>
+              <Navbar />
+              {children}
+            </PWAProvider>
           </RootProviders>
         </AuthProvider>
       </body>
