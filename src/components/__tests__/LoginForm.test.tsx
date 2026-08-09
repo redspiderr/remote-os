@@ -3,7 +3,15 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import LoginForm from '../LoginForm';
 import { signIn } from 'next-auth/react';
 
-vi.mocked(signIn).mockImplementation(async () => ({ error: null, ok: true, status: 200, url: '/' }));
+const mockSignInResponse = {
+  error: null,
+  code: null,
+  ok: true,
+  status: 200,
+  url: '/'
+};
+
+vi.mocked(signIn).mockImplementation(async () => mockSignInResponse as any);
 
 describe('LoginForm', () => {
   const onToggle = vi.fn();
@@ -37,7 +45,7 @@ describe('LoginForm', () => {
   });
 
   it('shows error on invalid credentials submit', async () => {
-    vi.mocked(signIn).mockResolvedValueOnce({ error: 'CredentialsSignin', ok: false, status: 401, url: null });
+    vi.mocked(signIn).mockResolvedValueOnce({ error: 'CredentialsSignin', code: 'credentials', ok: false, status: 401, url: null } as any);
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'bad@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } });
@@ -49,7 +57,7 @@ describe('LoginForm', () => {
   });
 
   it('calls signIn with credentials on submit', async () => {
-    vi.mocked(signIn).mockResolvedValueOnce({ error: null, ok: true, status: 200, url: '/' });
+    vi.mocked(signIn).mockResolvedValueOnce({ error: null, code: null, ok: true, status: 200, url: '/' } as any);
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });

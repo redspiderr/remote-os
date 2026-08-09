@@ -28,12 +28,12 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) {
       await logSecurityEvent({
-        event_type: 'auth_failure',
+        eventType: 'auth_failure',
         severity: 'warning',
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         endpoint: '/api/transcribe',
         method: 'POST',
-        status_code: 401,
+        statusCode: 401,
       });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -70,13 +70,13 @@ export async function POST(request: NextRequest) {
         }
         if (ownershipRes.rows[0].user_id !== session.user.id) {
           await logSecurityEvent({
-            event_type: 'unauthorized_access',
+            eventType: 'unauthorized_access',
             severity: 'warning',
             user_id: session.user.id,
             ip: request.headers.get('x-forwarded-for') || 'unknown',
             endpoint: '/api/transcribe',
             method: 'POST',
-            status_code: 403,
+            statusCode: 403,
           });
           return NextResponse.json({ error: 'Forbidden — not your standup' }, { status: 403 });
         }

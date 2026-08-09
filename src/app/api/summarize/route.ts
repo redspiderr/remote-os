@@ -19,12 +19,12 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) {
       await logSecurityEvent({
-        event_type: 'auth_failure',
-        severity: 'warning',
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-        endpoint: '/api/summarize',
-        method: 'POST',
-        status_code: 401,
+        eventType: "auth_failure",
+        severity: "warning",
+        ip: request.headers.get("x-forwarded-for") || "unknown",
+        endpoint: "/api/summarize",
+        method: "POST",
+        statusCode: 401,
       });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
