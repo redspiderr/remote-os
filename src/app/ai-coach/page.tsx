@@ -26,16 +26,16 @@ export default async function AICoachPage() {
 
   try {
     const [insightsRes, goalsRes, moodsRes, burnoutRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/ai/insights`, {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:${process.env.PORT || '3535'}`}/api/ai/insights`, {
         headers: { cookie: (globalThis as any).headers?.cookie ?? '' },
       }).catch(() => null),
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/ai/goals`, {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:${process.env.PORT || '3535'}`}/api/ai/goals`, {
         headers: { cookie: (globalThis as any).headers?.cookie ?? '' },
       }).catch(() => null),
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/ai/mood`, {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:${process.env.PORT || '3535'}`}/api/ai/mood`, {
         headers: { cookie: (globalThis as any).headers?.cookie ?? '' },
       }).catch(() => null),
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/ai/insights?type=burnout`, {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:${process.env.PORT || '3535'}`}/api/ai/insights?type=burnout`, {
         headers: { cookie: (globalThis as any).headers?.cookie ?? '' },
       }).catch(() => null),
     ]);

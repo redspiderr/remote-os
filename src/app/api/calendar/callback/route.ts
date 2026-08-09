@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
           client_id: process.env.GOOGLE_CLIENT_ID ?? "",
           client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
           code,
-          redirect_uri: `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/calendar/callback`,
+          redirect_uri: `${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}/api/calendar/callback`,
           grant_type: "authorization_code",
         }),
       });
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           client_id: process.env.OUTLOOK_CLIENT_ID ?? "",
           client_secret: process.env.OUTLOOK_CLIENT_SECRET ?? "",
           code,
-          redirect_uri: `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/calendar/callback`,
+          redirect_uri: `${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}/api/calendar/callback`,
           grant_type: "authorization_code",
         }),
       });

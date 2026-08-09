@@ -31,8 +31,8 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 
 USER nextjs
 
-EXPOSE 3000
-ENV PORT=3000
+EXPOSE 3535
+ENV PORT=3535
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "node_modules/next/dist/bin/next", "start"]

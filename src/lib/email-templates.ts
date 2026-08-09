@@ -159,7 +159,7 @@ export function dailyDigestTemplate(params: {
 
       <div class="divider"></div>
       <p style="text-align:center;">
-        <a href="${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}" class="btn">Open Dashboard</a>
+        <a href="${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}" class="btn">Open Dashboard</a>
       </p>
     `,
     `Daily Digest — ${params.teamName}`
@@ -182,7 +182,7 @@ export function dailyDigestTemplate(params: {
     params.missed.map((m) => `- ${m.name} (${m.email})`).join("\n") || "None — everyone submitted!" +
     `\n\nKEY BLOCKERS\n` +
     (params.allBlockers.join("\n") || "No blockers reported.") +
-    `\n\nOpen dashboard: ${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}`;
+    `\n\nOpen dashboard: ${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}`;
 
   return { html, text };
 }
@@ -196,7 +196,7 @@ export function reminderTemplate(params: {
       <h1>Hey ${escapeHtml(params.userName)}, time for your standup!</h1>
       <p>You haven't submitted your daily standup yet. It takes 90 seconds and keeps the whole team in sync — no meetings required.</p>
       <p style="text-align:center;">
-        <a href="${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}" class="btn">Record Standup</a>
+        <a href="${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}" class="btn">Record Standup</a>
       </p>
       ${
         params.teamName
@@ -210,7 +210,7 @@ export function reminderTemplate(params: {
   const text =
     `Hey ${params.userName}, time for your standup!\n\n` +
     `You haven't submitted your daily standup yet. It takes 90 seconds and keeps the whole team in sync.\n\n` +
-    `Record now: ${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}\n` +
+    `Record now: ${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}\n` +
     (params.teamName ? `Team: ${params.teamName}` : "");
 
   return { html, text };

@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 function getGoogleAuthUrl(state: string): string {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/calendar/callback`;
+  const redirectUri = `${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}/api/calendar/callback`;
   const scope = encodeURIComponent(
     "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar"
   );
@@ -24,7 +24,7 @@ function getGoogleAuthUrl(state: string): string {
 
 function getOutlookAuthUrl(state: string): string {
   const clientId = process.env.OUTLOOK_CLIENT_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/calendar/callback`;
+  const redirectUri = `${process.env.NEXTAUTH_URL ?? `http://localhost:${process.env.PORT || "3535"}`}/api/calendar/callback`;
   const scope = encodeURIComponent(
     "https://graph.microsoft.com/Calendars.ReadWrite https://graph.microsoft.com/Calendars.Read offline_access openid email profile"
   );

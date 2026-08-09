@@ -13,11 +13,15 @@ docker compose up --build -d
 ```
 
 Services:
-- **App** → http://localhost:3000
+- **App** → http://localhost:3535 (or custom `$PORT`)
 - **PostgreSQL** → localhost:5432
 - **Redis** → localhost:6379
 
 Health checks run on all services. The app waits for Postgres & Redis to be healthy before starting.
+
+## Coolify VPS Deployment
+
+For deploying on a Coolify VPS on port 3535, refer to the step-by-step guide in [docs/COOLIFY_DEPLOYMENT.md](file:///c:/Users/ramir/Documents/GitHub/remote-os/docs/COOLIFY_DEPLOYMENT.md) or use `docker-compose.coolify.yml`.
 
 ## Local Dev (no Docker)
 
